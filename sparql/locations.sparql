@@ -1,0 +1,12 @@
+SELECT ?location ?provincia_name ?location_name ?location_wikidata
+WHERE {
+    GRAPH <https://id.euskadi.eus/graph/NORA> {
+        ?location gn:officialname ?location_name .
+        ?location territorio:provincia ?provincia .
+    	?provincia gn:officialname ?provincia_name .
+    }
+  
+  GRAPH <https://id.euskadi.eus/graph/NORA-links>{
+            ?location owl:sameAs ?location_wikidata .
+        }
+}
