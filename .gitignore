@@ -118,6 +118,7 @@ frontend/cypress/snapshots/linux/1x
 
 
 .env 
+.venv
 .info
 
 pruebas/*

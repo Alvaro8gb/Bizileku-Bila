@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     logo = load_resources()
 
-    st.sidebar.write("<h1> Euskadi </h1> ", unsafe_allow_html=True)
+    st.sidebar.write("<h1> Bizileku Bila </h1>  <h2><i>En busca de un lugar para vivir en Euskadi</i> </h2> ", unsafe_allow_html=True)
     st.sidebar.write(logo, unsafe_allow_html=True)
     st.sidebar.markdown(
         "[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
@@ -71,8 +71,17 @@ if __name__ == "__main__":
                 selected_municipio)]
 
             with st.spinner('Cargando información de los municipios'):
-                filtered_municipios['Latitud'], filtered_municipios['Longitud'], filtered_municipios["Image URL"] = zip(
-                    *filtered_municipios['Qualifier'].apply(fetch_lat_long))
+
+                lat_long_pairs = filtered_municipios['Qualifier'].apply(fetch_lat_long)
+
+                latitudes, longitudes, image_urls = zip(*lat_long_pairs)
+
+                filtered_municipios.loc[:, ['Latitud', 'Longitud', 'Image URL']] = pd.DataFrame({
+                    'Latitud': latitudes,
+                    'Longitud': longitudes,
+                    'Image URL': image_urls
+                })
+
 
             st.write(f"Numero de municipios de : {len(filtered_municipios)}")
             st.write(filtered_municipios)

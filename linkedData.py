@@ -8,21 +8,20 @@ ENDPOINT = "https://api.euskadi.eus/sparql"
 QUERIES_PATH = "./sparql/"
 
 
-
 @st.cache_data
 def load_queries():
 
     queries = {}
 
     ending = '.sparql'
-    size = len(ending) # Remove '.sparql' extension from the key
+    size = len(ending)  # Remove '.sparql' extension from the key
 
     for filename in listdir(QUERIES_PATH):
 
         if filename.endswith(ending):
             file_path = join(QUERIES_PATH, filename)
             with open(file_path, 'r') as file:
-                
+
                 queries[filename[:-size]] = file.read()
 
     return queries
@@ -51,6 +50,7 @@ def request(query: str = None) -> pd.DataFrame:
 
     return bindings
 
+
 @st.cache_data
 def load_municipios():
 
@@ -58,21 +58,21 @@ def load_municipios():
 
     location_q = QUERIES["prefix"] + QUERIES["locations"]
 
-
-    print(location_q)
+    #print(location_q)
     result = request(location_q)
 
     data_list = [
-                {
-                    "Municipio": item["location_name"]["value"],
-                    "Provincia": item["provincia_name"]["value"],
-                    "ID": item["location"]["value"].split("/")[-1].replace("-", ""),
-                    "Qualifier": item["location_wikidata"]["value"].split("/")[-1],
-                }
-                for item in result
-            ]
+        {
+            "Municipio": item["location_name"]["value"],
+            "Provincia": item["provincia_name"]["value"],
+            "ID": item["location"]["value"].split("/")[-1].replace("-", ""),
+            "Qualifier": item["location_wikidata"]["value"].split("/")[-1],
+        }
+        for item in result
+    ]
 
     return pd.DataFrame(data_list)
+
 
 if __name__ == "__main__":
 
