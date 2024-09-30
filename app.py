@@ -90,7 +90,7 @@ def search_municipality():
                 filtered_municipios.loc[:, 'Image URL'] = image_urls
 
             st.write(f"Numero de municipios de : {len(filtered_municipios)}")
-            st.write(filtered_municipios)
+            #st.write(filtered_municipios)
 
             show_municipios(filtered_municipios)
 
@@ -152,7 +152,8 @@ def search_municipality():
                 links = indicator_data['_links']
                 st.write(f"**More Info:** [Link to indicator]({links['self']['href']})")
                 
-
+def find_municipality():
+    pass
 
 if __name__ == "__main__":
 
@@ -164,4 +165,18 @@ if __name__ == "__main__":
     st.sidebar.markdown(
         "[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
 
-    search_municipality()
+    st.sidebar.title("Navegación")
+    selected_section = st.sidebar.radio("Elige una sección:", ["Encontrar tu municipio para vivir", "Ver toda la informacion de un municipio"])
+
+    if selected_section == "Encontrar tu municipio para vivir":
+        st.header("Section: ncontrar tu municipio para vivir")
+        st.write("This section provides an overview of the data.")
+        find_municipality()
+
+    elif selected_section == "Ver toda la informacion de un municipio":
+        st.header("Section: Ver toda la informacion de un municipio")
+        st.write("This section provides analysis on the data.")
+        search_municipality()
+    else:
+        pass
+    
