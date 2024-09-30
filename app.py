@@ -9,7 +9,7 @@ from wikiData import get_entity_data
 from linkedData import load_municipios
 from resourceManager import load_resources
 
-
+@st.cache_data
 def show_municipios(df):
 
     scatterplot_layer = pdk.Layer(
@@ -25,7 +25,7 @@ def show_municipios(df):
     view_state = pdk.ViewState(
         latitude=df['Latitud'].mean(),
         longitude=df['Longitud'].mean(),
-        zoom=10,
+        zoom=9,
         pitch=0,
     )
 
@@ -37,20 +37,20 @@ def show_municipios(df):
 
     st.pydeck_chart(r)
 
-
+@st.cache_data
 def show_indicator(years_data, selected_indicator):
 
-    fig = px.line(years_data, x='Year', y='Value', title=f'{selected_indicator}')
+    fig = px.line(years_data, x='Año', y='Valor', title=f'{selected_indicator}')
 
     fig.update_layout(
-        xaxis_title="Year",
-        yaxis_title="Value",
+        xaxis_title="Año",
+        yaxis_title="Valor",
         template="plotly_white"  
     )
 
     st.plotly_chart(fig)
 
-    
+@st.cache_data   
 def fetch_lat_long(qualifier):
 
     entity_data = get_entity_data(qualifier)
@@ -85,12 +85,9 @@ def search_municipality():
 
                 latitudes, longitudes, image_urls = zip(*lat_long_pairs)
 
-                filtered_municipios[['Latitud', 'Longitud', 'Image URL']] = pd.DataFrame({
-                    'Latitud': latitudes,
-                    'Longitud': longitudes,
-                    'Image URL': image_urls
-                })
-
+                filtered_municipios.loc[:, 'Latitud'] = latitudes
+                filtered_municipios.loc[:, 'Longitud'] = longitudes
+                filtered_municipios.loc[:, 'Image URL'] = image_urls
 
             st.write(f"Numero de municipios de : {len(filtered_municipios)}")
             st.write(filtered_municipios)
@@ -116,19 +113,44 @@ def search_municipality():
 
                 #st.json(data)
 
-                indicator_names = [indicator['name'] for indicator in data['indicators']]
-            
-                selected_indicator = st.selectbox("Selecciona un Indicador", indicator_names)
+                indicators_dict = {indicator['name']: indicator for indicator in data['indicators']}
 
-                for indicator in data['indicators']:
-                    if indicator['name'] == selected_indicator:
-                        
-                        years_data = pd.DataFrame(indicator['years'][0].items(), columns=['Year', 'Value'])
+                groups = list(set([info['_links']['group']['name'] for info in indicators_dict.values()]))
 
-                        show_indicator(years_data, selected_indicator)
+                selected_group = st.selectbox("Selecciona un Grupo", groups)
 
-                        links = indicator['_links']
-                        st.write(f"**More Info:** [Link to indicator]({links['self']['href']})")
+                filtered_subgroups = list(set(
+                    info['_links']['subgroup']['name']
+                    for info in indicators_dict.values()
+                    if info['_links']['group']['name'] == selected_group
+                ))
+
+                selected_subgroup = st.selectbox("Selecciona un Subgrupo", filtered_subgroups)
+
+                filtered_indicators = [
+                    info['name']
+                    for info in indicators_dict.values()
+                    if info['_links']['subgroup']['name'] == selected_subgroup
+                ]
+
+                selected_indicator = st.selectbox("Selecciona un Indicador", filtered_indicators)
+
+                indicator_data = indicators_dict[selected_indicator]
+
+                years_data = pd.DataFrame(indicator_data['years'][0].items(), columns=['Año', 'Valor'])
+                
+                if years_data.empty:
+                    st.write("No data")
+                elif years_data.shape[0] == 1:
+                    st.write(f"{selected_indicator}")
+                    years_data.set_index('Año', drop=False, inplace=True)
+                    years_data.drop(columns=['Año'], inplace=True)
+                    st.table(years_data)
+                else:
+                    show_indicator(years_data, selected_indicator)
+
+                links = indicator_data['_links']
+                st.write(f"**More Info:** [Link to indicator]({links['self']['href']})")
                 
 
 
