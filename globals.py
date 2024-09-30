@@ -21,10 +21,10 @@ headers = {
     "Authorization": "Bearer" + " " + JWT,
 }
 
-MET = APIMet(BASE_URL, headers)
-OCEAN = APIOcean(BASE_URL, headers )
-LOCATIONS = APILocations(BASE_URL, headers)
-KPI = APIkpi(BASE_URL, headers)
+API_MET = APIMet(BASE_URL, headers)
+API_OCEAN = APIOcean(BASE_URL)
+API_LOCATIONS = APILocations(BASE_URL)
+API_KPI = APIkpi(BASE_URL)
 
 
 
@@ -40,5 +40,5 @@ if __name__ == "__main__":
 
 
   
-  print(KPI.get_groups())
-  KPI.get_inidicators("48001")
+  print(API_KPI.get_groups())
+  API_KPI.get_inidicators("48001")

@@ -31,3 +31,9 @@ def get_entity_data(qualifier):
         'latitude': latitude,
         'longitude': longitude
     }
+
+
+
+if __name__ == "__main__":
+
+    print(get_entity_data("Q1242411"))
