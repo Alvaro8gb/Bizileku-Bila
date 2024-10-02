@@ -7,14 +7,17 @@ from datetime import datetime, timedelta
 def ocean():
 
     date_ini = st.date_input("Select the first date", datetime.now().date())
-    date_end = st.date_input("Select the second date", (datetime.now() + timedelta(days=1)).date())
-    
-    data = api_ocean.get_ocean_forecast(date_ini.day, date_ini.month, date_ini.year, date_end.strftime("%Y%m%d"))
+    date_end = st.date_input(
+        "Select the second date", (datetime.now() + timedelta(days=1)).date()
+    )
+
+    data = api_ocean.get_ocean_forecast(
+        date_ini.day, date_ini.month, date_ini.year, date_end.strftime("%Y%m%d")
+    )
 
     # Optionally display the raw data
     st.header("Raw Data")
     st.json(data)
-
 
     st.title("Weather Forecast")
 
@@ -24,18 +27,20 @@ def ocean():
 
     st.header("Forecast Description")
     st.subheader("In Spanish")
-    st.write(data['forecastDescriptionByLang']['SPANISH'])
+    st.write(data["forecastDescriptionByLang"]["SPANISH"])
     st.subheader("In Basque")
-    st.write(data['forecastDescriptionByLang']['BASQUE'])
+    st.write(data["forecastDescriptionByLang"]["BASQUE"])
 
     st.header("Forecast Text")
     st.subheader("In Spanish")
-    st.write(data['forecastTextByLang']['SPANISH'])
+    st.write(data["forecastTextByLang"]["SPANISH"])
     st.subheader("In Basque")
-    st.write(data['forecastTextByLang']['BASQUE'])
+    st.write(data["forecastTextByLang"]["BASQUE"])
 
     st.header("Conditions")
-    st.write(f"Water Temperature: {data['waterTemperature']['value']} {data['waterTemperature']['unit']}")
+    st.write(
+        f"Water Temperature: {data['waterTemperature']['value']} {data['waterTemperature']['unit']}"
+    )
     st.write(f"Wave Height: {data['waveHeight']} meters")
 
     st.header("Visibility")

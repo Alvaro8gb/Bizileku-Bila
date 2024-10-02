@@ -2,14 +2,15 @@ import json
 import requests
 import streamlit as st
 
-'''
+"""
 
 API Docs
  https://opendata.euskadi.eus/apis/-/apis-open-data/
 
-'''
+"""
 
-class APIManager():
+
+class APIManager:
 
     def __init__(self, base, headers=None):
         self.base = base
@@ -19,12 +20,12 @@ class APIManager():
     def request(_self, route, keys):
         url = _self.base + route.format(**keys)
         response = requests.request("GET", url, headers=_self.headers)
-        
+
         if response.status_code == 200:
             content = json.loads(response.text)
         else:
             content = "Error"
-        
+
         return content
 
 
@@ -38,19 +39,18 @@ class APIMet(APIManager):
             "astro/calendar/for/{YYYY}/{MM}/{DD}",
             {"YYYY": str(year), "MM": str(month), "DD": str(day)},
         )
-    
+
 
 class APIOcean(APIMet):
-    def get_ocean_forecast(self, day: int, month: int, year: int, yyymmdd:str):
+    def get_ocean_forecast(self, day: int, month: int, year: int, yyymmdd: str):
         """
         Get information like the text description for the full forecast in basque and spanish, and information like the water temperature and the visibility.
         """
 
         return super().request(
-                "ocean/forecast/at/{YYYY}/{MM}/{DD}/for/{YYYYMMDD}",
-                {"YYYY": str(year), "MM": str(month), "DD": str(day), "YYYYMMDD": yyymmdd},
-            )
-    
+            "ocean/forecast/at/{YYYY}/{MM}/{DD}/for/{YYYYMMDD}",
+            {"YYYY": str(year), "MM": str(month), "DD": str(day), "YYYYMMDD": yyymmdd},
+        )
 
 
 class APILocations(APIMet):
@@ -70,10 +70,9 @@ class APILocations(APIMet):
         """
 
         return super().request(
-                "regions/{regionId}/zones",
-                {"regionId": regionId},
-            )
-    
+            "regions/{regionId}/zones",
+            {"regionId": regionId},
+        )
 
 
 class APIkpi(APIManager):
@@ -81,13 +80,16 @@ class APIkpi(APIManager):
     def __init__(self, base, headers=None):
         super().__init__(base + "/udalmap/", headers)
 
-
     def get_groups(self):
         return super().request("/groups", {})
+
+    def get_all_indicators(self):
+        return super().request(
+            "indicators", {}
+        )
     
     def get_inidicators(self, municipalityId):
         return super().request(
-                        "indicators/municipalities/{municipalityId}",
-                        {"municipalityId": municipalityId},
-                    )
-
+            "indicators/municipalities/{municipalityId}",
+            {"municipalityId": municipalityId},
+        )

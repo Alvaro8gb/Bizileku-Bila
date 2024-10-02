@@ -13,14 +13,14 @@ def load_queries():
 
     queries = {}
 
-    ending = '.sparql'
+    ending = ".sparql"
     size = len(ending)  # Remove '.sparql' extension from the key
 
     for filename in listdir(QUERIES_PATH):
 
         if filename.endswith(ending):
             file_path = join(QUERIES_PATH, filename)
-            with open(file_path, 'r') as file:
+            with open(file_path, "r") as file:
 
                 queries[filename[:-size]] = file.read()
 
@@ -30,11 +30,9 @@ def load_queries():
 @st.cache_data
 def request(query: str = None) -> pd.DataFrame:
 
-    headers = {
-        "Accept": "application/sparql-results+json"
-    }
+    headers = {"Accept": "application/sparql-results+json"}
 
-    response = requests.get(ENDPOINT, params={'query': query}, headers=headers)
+    response = requests.get(ENDPOINT, params={"query": query}, headers=headers)
 
     try:
 
@@ -58,7 +56,7 @@ def load_municipios():
 
     location_q = QUERIES["prefix"] + QUERIES["locations"]
 
-    #print(location_q)
+    # print(location_q)
     result = request(location_q)
 
     data_list = [

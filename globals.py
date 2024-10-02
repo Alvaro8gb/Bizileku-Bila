@@ -27,18 +27,25 @@ API_LOCATIONS = APILocations(BASE_URL)
 API_KPI = APIkpi(BASE_URL)
 
 
-
 if __name__ == "__main__":
-    
-  #zones = api_locations.get_zones("basque_country")
 
-  #for z in zones: 
+    # zones = api_locations.get_zones("basque_country")
+
+    # for z in zones:
     #  print(z["regionZoneId"])
 
-  # print(api_met.get_regions())
-  #print(api_met.get_astro(2, 11, 2022))
+    # print(api_met.get_regions())
+    # print(api_met.get_astro(2, 11, 2022))
 
+    #print(API_KPI.get_groups())
+    
+    
+    for e in API_KPI.get_inidicators("48001")["indicators"]:
+        print(e, "\n\n")
+    
+    indicators = API_KPI.get_all_indicators()
 
-  
-  print(API_KPI.get_groups())
-  API_KPI.get_inidicators("48001")
+    for i in indicators:
+        print(i)
+
+    print(len(indicators))
