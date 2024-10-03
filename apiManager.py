@@ -17,7 +17,7 @@ class APIManager:
         self.headers = headers
 
     @st.cache_data
-    def request(_self, route, keys):
+    def request(_self, route, keys, params=None):
         url = _self.base + route.format(**keys)
         response = requests.request("GET", url, headers=_self.headers)
 
@@ -84,12 +84,27 @@ class APIkpi(APIManager):
         return super().request("/groups", {})
 
     def get_all_indicators(self):
-        return super().request(
-            "indicators", {}
-        )
-    
+        return super().request("indicators", {})
+
     def get_inidicators(self, municipalityId):
         return super().request(
             "indicators/municipalities/{municipalityId}",
             {"municipalityId": municipalityId},
+        )
+
+    def get_municipalities(self, indicatorId):
+        return super().request(
+            "indicators/{indicatorId}/municipalities",
+            {"indicatorId": indicatorId},
+        )
+
+
+class APIDirectory(APIManager):
+
+    def __init__(self, base, headers=None):
+        super().__init__(base + "/directory/", headers)
+
+    def get_municipality_by_id(self, municipalityId):
+        return super().request(
+            "entities", {}, {"municipalityId": municipalityId, "subType": "GENERAL"}
         )
