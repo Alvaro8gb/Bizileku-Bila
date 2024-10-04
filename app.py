@@ -299,7 +299,14 @@ def find_municipality(df_municipios):
 
     if indicators:
 
-        st.write("### Elige un valor para cada indicador (1-5):")
+        st.write("""### Elige un valor del 1 al 5 para cada indicador y ayúdanos a encontrar los mejores municipios para ti:
+                 - **1**: Menos importancia
+                 - **5**: Máxima importancia""")
+        
+        st.write("""**Es importante considerar el impacto de cada indicador en tus recomendaciones.** 
+                 Algunos indicadores, como la tasa de criminalidad, pueden resultar confusos. Aunque puedes seleccionar un peso bajo (1) para estos indicadores, sus valores absolutos suelen ser altos, lo que puede afectar negativamente las recomendaciones. 
+                 Para obtener resultados más útiles, te sugerimos **evitar seleccionar indicadores que representen aspectos negativos y optar por aquellos que reflejen calidad de vida, servicios y bienestar en el municipio.** 
+                 ¡Elige indicadores que te ayuden a encontrar el municipio ideal para ti!""")
 
         for i in indicators:
             value = st.slider(f"{i.name}", min_value=1, max_value=5, value=1, step=1)
@@ -307,7 +314,7 @@ def find_municipality(df_municipios):
 
         if st.button("Mostrar municipios recomendados para vivir"):
 
-            with st.spinner("Buscando los mejores municipios"):
+            with st.spinner("Buscando los mejores municipios..."):
                 top_5_municipalities = search_best_municipalities(indicators, 5)
 
                 filter_ids = [
@@ -355,19 +362,25 @@ if __name__ == "__main__":
     selected_section = st.sidebar.radio(
         "Elige una sección:",
         [
-            "Encontrar tu municipio para vivir",
-            "Ver toda la informacion de un municipio",
+            "Encuentra tu municipio ideal",
+            "Explorar los municipios",
         ],
     )
 
-    if selected_section == "Encontrar tu municipio para vivir":
-        st.header("Section: ncontrar tu municipio para vivir")
-        st.write("This section provides an overview of the data.")
+    if selected_section == "Encuentra tu municipio ideal":
+        st.header("Encuentra tu municipio ideal")
+        st.write("""**Selecciona los indicadores que más te importan y puntúalos del 1 al 5.**
+                  En esta sección, podrás valorar diferentes aspectos de los municipios que son importantes para ti, como calidad de vida, servicios, y entorno. 
+                  Basado en tus preferencias, te ofreceremos recomendaciones personalizadas que te ayudarán a encontrar el municipio que mejor se adapta a tus necesidades. 
+                 ¡Comienza a explorar y encuentra tu lugar ideal para vivir!""")
         find_municipality(df_municipios)
 
-    elif selected_section == "Ver toda la informacion de un municipio":
-        st.header("Section: Ver toda la informacion de un municipio")
-        st.write("This section provides analysis on the data.")
+    elif selected_section == "Explorar los municipios":
+        st.header("Explorar los municipios: Encuentra toda la información relevante")
+        st.write(""" **Selecciona un municipio y elige el indicador que deseas visualizar**
+                 Aquí podrás ver información relevante, como datos demográficos, indicadores de calidad de vida, y fotos del municipio seleccionado. 
+                 Utiliza el menú desplegable para hacer tu elección y obtener detalles personalizados.  
+                 ¡Descubre lo que cada municipio tiene para ofrecer!""")
         search_municipality(df_municipios)
     else:
         pass
