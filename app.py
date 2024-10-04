@@ -9,10 +9,11 @@ from wikiData import get_entity_data
 from linkedData import load_municipios
 from resourceManager import load_resources
 from models import create_indicators
+from score import calculate_score
 
 
 @st.cache_data
-def show_municipios(df):
+def show_map_municipios(df):
 
     scatterplot_layer = pdk.Layer(
         "ScatterplotLayer",
@@ -34,18 +35,27 @@ def show_municipios(df):
     r = pdk.Deck(
         layers=[scatterplot_layer],
         initial_view_state=view_state,
-        tooltip={"text": f"{{Hospital}}: {{{0}}}"},
+        tooltip={"text": "{Municipio}"},
     )
 
     st.pydeck_chart(r)
 
 
 @st.cache_data
-def show_indicator(years_data, selected_indicator):
+def show_indicator(years_data, municipality_name, selected_indicator):
 
-    fig = px.line(years_data, x="Año", y="Valor", title=f"{selected_indicator}")
+    fig = px.line(
+        years_data, x="Año", y="Valor", title="Indicador de " + municipality_name
+    )
 
-    fig.update_layout(xaxis_title="Año", yaxis_title="Valor", template="plotly_white")
+    fig.update_layout(
+        xaxis_title="Año",
+        yaxis_title=f"{selected_indicator}",
+        template="plotly_white",
+        width=1000,
+        height=600,
+        title_x=0.4,
+    )
 
     st.plotly_chart(fig)
 
@@ -60,6 +70,20 @@ def fetch_lat_long(qualifier):
         entity_data.get("longitude", None),
         entity_data.get("img_url", None),
     )
+
+
+def search_coordinates(df):
+
+    with st.spinner("Cargando información de los municipios"):
+
+        lat_long_pairs = df["Qualifier"].apply(fetch_lat_long)
+
+        latitudes, longitudes, image_urls = zip(*lat_long_pairs)
+
+        df.loc[:, "Latitud"] = latitudes
+        df.loc[:, "Longitud"] = longitudes
+        df.loc[:, "Image URL"] = image_urls
+    return df
 
 
 def select_groups(indicators_dict: dict):
@@ -187,38 +211,28 @@ def search_municipality(df_municipios):
                 df_municipios["Municipio"].isin(selected_municipio)
             ]
 
-            with st.spinner("Cargando información de los municipios"):
-
-                lat_long_pairs = filtered_municipios["Qualifier"].apply(fetch_lat_long)
-
-                latitudes, longitudes, image_urls = zip(*lat_long_pairs)
-
-                filtered_municipios.loc[:, "Latitud"] = latitudes
-                filtered_municipios.loc[:, "Longitud"] = longitudes
-                filtered_municipios.loc[:, "Image URL"] = image_urls
-
-            st.write(f"Numero de municipios de : {len(filtered_municipios)}")
+            # st.write(f"Numero de municipios de : {len(filtered_municipios)}")
             # st.write(filtered_municipios)
 
-            show_municipios(filtered_municipios)
+            filtered_municipios = search_coordinates(filtered_municipios)
 
-            selected_municipio_info = st.selectbox(
-                "Mas información", selected_municipio
-            )
+            show_map_municipios(filtered_municipios)
 
-            if selected_municipio_info:
+            selected_municipality = st.selectbox("Mas información", selected_municipio)
+
+            if selected_municipality:
                 municipios_dict = filtered_municipios.set_index("Municipio").to_dict(
                     "index"
                 )
 
-                info = municipios_dict[selected_municipio_info]
+                info = municipios_dict[selected_municipality]
 
                 # st.write(info)
 
                 with st.spinner("Cargando imagen"):
                     st.image(
                         info["Image URL"],
-                        caption=selected_municipio_info,
+                        caption=selected_municipality,
                         use_column_width=True,
                     )
 
@@ -241,7 +255,7 @@ def search_municipality(df_municipios):
                     years_data.drop(columns=["Año"], inplace=True)
                     st.table(years_data)
                 else:
-                    show_indicator(years_data, indicator.name)
+                    show_indicator(years_data, selected_municipality, indicator.name)
 
 
 def search_best_municipalities(indicators, k):
@@ -250,7 +264,7 @@ def search_best_municipalities(indicators, k):
     for i in indicators:
         municipalities = API_KPI.get_municipalities(i.id)
 
-        #st.json(municipalities)
+        # st.json(municipalities)
 
         for m in municipalities["municipalities"]:
 
@@ -259,7 +273,8 @@ def search_best_municipalities(indicators, k):
 
             last_year = max(m["years"][0].keys())
             last_value = m["years"][0][last_year]
-            data_municipalities[m["id"]][i.id] = last_value * i.weight
+            score = calculate_score(last_value)
+            data_municipalities[m["id"]][i.id] = score * i.weight
 
     # st.json(data_municipalities)
 
@@ -295,14 +310,32 @@ def find_municipality(df_municipios):
             with st.spinner("Buscando los mejores municipios"):
                 top_5_municipalities = search_best_municipalities(indicators, 5)
 
-                filter_ids = [ municipality_id for municipality_id, _ in top_5_municipalities ]
+                filter_ids = [
+                    municipality_id for municipality_id, _ in top_5_municipalities
+                ]
 
-                filtered_df = df_municipios[df_municipios['ID'].isin(filter_ids)]
+                filtered_df = df_municipios[df_municipios["ID"].isin(filter_ids)]
 
-                filtered_df['Sum Value'] = filtered_df['ID'].map(dict(top_5_municipalities))
+                filtered_df["Puntuación"] = filtered_df["ID"].map(
+                    dict(top_5_municipalities)
+                )
 
-                st.table(filtered_df.sort_values(by='Sum Value', ascending=False))
-            
+                df_show = filtered_df[["Municipio", "Provincia", "Puntuación"]]
+
+                df_show.set_index("Municipio", inplace=True)
+
+                st.table(df_show.sort_values(by="Puntuación", ascending=False))
+
+                filtered_municipios = search_coordinates(filtered_df)
+                show_map_municipios(filtered_municipios)
+
+                # filtered_municipios['Google Maps Enlace'] = filtered_municipios.apply(create_google_maps_link, axis=1)
+
+                # st.table(filtered_municipios)
+
+
+def create_google_maps_link(row):
+    return f"https://www.google.com/maps/search/?api=1&query={row['Latitud']},{row['Longitud']}"
 
 
 if __name__ == "__main__":
