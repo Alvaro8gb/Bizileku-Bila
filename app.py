@@ -60,7 +60,6 @@ def show_indicator(years_data, municipality_name, selected_indicator):
     st.plotly_chart(fig)
 
 
-@st.cache_data
 def fetch_lat_long(qualifier):
 
     entity_data = get_entity_data(qualifier)
@@ -299,15 +298,23 @@ def find_municipality(df_municipios):
 
     if indicators:
 
-        st.write("""### Elige un valor del 1 al 5 para cada indicador y ayúdanos a encontrar los mejores municipios para ti:
-                 - **1**: Menos importancia
-                 - **5**: Máxima importancia""")
         
-        st.write("""**Es importante considerar el impacto de cada indicador en tus recomendaciones.** 
+        
+        st.markdown("""**Es importante considerar el impacto de cada indicador en tus recomendaciones.** 
                  Algunos indicadores, como la tasa de criminalidad, pueden resultar confusos. Aunque puedes seleccionar un peso bajo (1) para estos indicadores, sus valores absolutos suelen ser altos, lo que puede afectar negativamente las recomendaciones. 
                  Para obtener resultados más útiles, te sugerimos **evitar seleccionar indicadores que representen aspectos negativos y optar por aquellos que reflejen calidad de vida, servicios y bienestar en el municipio.** 
                  ¡Elige indicadores que te ayuden a encontrar el municipio ideal para ti!""")
 
+        st.markdown("""
+        #### Escala de Importancia
+
+        1. **Menos importancia**: Este valor indica que el indicador no es relevante para ti.
+        2. **Poca importancia**: El indicador es ligeramente importante, pero no decisivo.
+        3. **Importancia moderada**: Consideras el indicador importante, pero no crucial.
+        4. **Alta importancia**: El indicador es muy importante y debe ser tenido en cuenta.
+        5. **Máxima importancia**: Este valor representa que el indicador es crítico para tu decisión.
+
+        """)
         for i in indicators:
             value = st.slider(f"{i.name}", min_value=1, max_value=5, value=1, step=1)
             i.weight = value
