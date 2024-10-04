@@ -129,6 +129,12 @@ def select_indicator_several(indicators_json: dict):
     if "selected_indicators" not in st.session_state:
         st.session_state["selected_indicators"] = []
 
+    st.markdown("### 2. Selecciona los indicadores clave")
+
+    st.write("Ten en cuenta que algunos indicadores, como la criminalidad, pueden distorsionar los resultados.")
+                    
+    st.markdown("Para mejores sugerencias, **evita seleccionar indicadores que representen aspectos negativos**") 
+
     selected_indicators_names = st.multiselect(
         "Selecciona un Indicador",
         filtered_indicators,
@@ -180,8 +186,8 @@ def select_indicator_several(indicators_json: dict):
             html_output += "</ul></li>"
         html_output += "</ul>"
 
-        st.markdown("### Lista de Indicadores Seleccionados:")
-        st.markdown(html_output, unsafe_allow_html=True)
+     #   st.markdown("### Lista de Indicadores Seleccionados:")
+     #  st.markdown(html_output, unsafe_allow_html=True)
 
     indicators = [
         indicators_dict[name] for name in st.session_state["selected_indicators"]
@@ -191,7 +197,7 @@ def select_indicator_several(indicators_json: dict):
 
 
 def search_municipality(df_municipios):
-
+    st.subheader("1. Selecciona el municipio que quieres explorar")
     seleteted_provincia = st.multiselect(
         "Elige una provincia:", df_municipios["Provincia"].unique()
     )
@@ -238,7 +244,8 @@ def search_municipality(df_municipios):
                 indicators_json = API_KPI.get_inidicators(info["ID"])
 
                 # st.json(indicators_json)
-
+                st.markdown("### ¿Buscas más informacion del municipio?")
+                st.subheader("2. Elige qué indicador quieres explorar")
                 indicators_dict = create_indicators(indicators_json["indicators"])
                 indicator = select_indicator_one(indicators_dict)
 
@@ -297,16 +304,9 @@ def find_municipality(df_municipios):
     indicators = select_indicator_several(indicators_json)
 
     if indicators:
-
-        
-        
-        st.markdown("""**Es importante considerar el impacto de cada indicador en tus recomendaciones.** 
-                 Algunos indicadores, como la tasa de criminalidad, pueden resultar confusos. Aunque puedes seleccionar un peso bajo (1) para estos indicadores, sus valores absolutos suelen ser altos, lo que puede afectar negativamente las recomendaciones. 
-                 Para obtener resultados más útiles, te sugerimos **evitar seleccionar indicadores que representen aspectos negativos y optar por aquellos que reflejen calidad de vida, servicios y bienestar en el municipio.** 
-                 ¡Elige indicadores que te ayuden a encontrar el municipio ideal para ti!""")
-
+                    
         st.markdown("""
-        #### Escala de Importancia
+        #### 3. Asigna la escala de importancia
 
         1. **Menos importancia**: Este valor indica que el indicador no es relevante para ti.
         2. **Poca importancia**: El indicador es ligeramente importante, pero no decisivo.
@@ -375,19 +375,21 @@ if __name__ == "__main__":
     )
 
     if selected_section == "Encuentra tu municipio ideal":
-        st.header("Encuentra tu municipio ideal")
-        st.write("""**Selecciona los indicadores que más te importan y puntúalos del 1 al 5.**
-                  En esta sección, podrás valorar diferentes aspectos de los municipios que son importantes para ti, como calidad de vida, servicios, y entorno. 
-                  Basado en tus preferencias, te ofreceremos recomendaciones personalizadas que te ayudarán a encontrar el municipio que mejor se adapta a tus necesidades. 
-                 ¡Comienza a explorar y encuentra tu lugar ideal para vivir!""")
+        st.title("Encuentra tu municipio ideal")
+
+        st.markdown("### ¡Sigue estos 3 pasos para encontrar el municipio perfecto para ti!")
+
+        st.subheader("1. Elige los grupos que te interesan ")
+
+
         find_municipality(df_municipios)
 
     elif selected_section == "Explorar los municipios":
-        st.header("Explorar los municipios: Encuentra toda la información relevante")
-        st.write(""" **Selecciona un municipio y elige el indicador que deseas visualizar**
-                 Aquí podrás ver información relevante, como datos demográficos, indicadores de calidad de vida, y fotos del municipio seleccionado. 
-                 Utiliza el menú desplegable para hacer tu elección y obtener detalles personalizados.  
-                 ¡Descubre lo que cada municipio tiene para ofrecer!""")
+        st.title("Explorar los municipios")
+
+        st.markdown("**Selecciona un municipio del que quieras ver información**")
+
+        st.subheader("¡Descubre lo que cada municipio te puede ofrecer!")
         search_municipality(df_municipios)
     else:
         pass
