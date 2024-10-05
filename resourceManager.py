@@ -12,7 +12,7 @@ def render_svg(svg):
 
 @st.cache_data
 def load_resources():
-    with open("static/flag.svg") as f:
+    with open("static/logo.svg") as f:
         logo_string = f.read()
 
     logo = render_svg(logo_string)

@@ -26,7 +26,8 @@ def parse_indicator(json_data: dict):
 
 def create_indicators(indicators_json: dict):
     return {
-        html.unescape(indicator["name"]): parse_indicator(indicator) for indicator in indicators_json
+        html.unescape(indicator["name"]): parse_indicator(indicator)
+        for indicator in indicators_json
     }
 
 

@@ -139,12 +139,15 @@ def select_indicator_several(indicators_json: dict):
     if "selected_indicators" not in st.session_state:
         st.session_state["selected_indicators"] = []
 
-    st.markdown("### 2. Selecciona los indicadores clave")
+    st.markdown("### 2. Selecciona los indicadores clave :bar_chart: ")
 
-    st.write("Ten en cuenta que algunos indicadores, como la criminalidad, pueden distorsionar los resultados.")
+    st.write(
+        "Ten en cuenta que algunos indicadores, como la criminalidad, pueden distorsionar los resultados."
+    )
 
     st.markdown(
-        "Para mejores sugerencias, **evita seleccionar indicadores que representen aspectos negativos**")
+        "Para mejores sugerencias, **evita seleccionar indicadores que representen aspectos negativos**"
+    )
 
     selected_indicators_names = st.multiselect(
         "Selecciona un Indicador",
@@ -182,7 +185,7 @@ def select_indicator_several(indicators_json: dict):
 
 
 def search_municipality(df_municipios):
-    st.subheader("1. Selecciona el municipio que quieres explorar")
+    st.subheader("1. Selecciona el municipio que quieres explorar :sparkles:")
     seleteted_provincia = st.multiselect(
         "Elige una provincia:", df_municipios["Provincia"].unique()
     )
@@ -209,7 +212,8 @@ def search_municipality(df_municipios):
             show_map_municipios(filtered_municipios)
 
             selected_municipio = st.selectbox(
-                "Mas información", selected_municipios)
+                "Mas información :round_pushpin: ", selected_municipios
+            )
 
             if selected_municipio:
                 municipios_dict = filtered_municipios.set_index("Municipio").to_dict(
@@ -228,13 +232,14 @@ def search_municipality(df_municipios):
                     )
 
                 st.markdown(
-                    f'Para más información consulta página de Wikipedia: [aquí]({info["Wiki URL"]})')
+                    f'Para más información consulta página de Wikipedia: [aquí]({info["Wiki URL"]})'
+                )
 
                 indicators_json = API_KPI.get_inidicators(info["ID"])
 
                 # st.json(indicators_json)
-                st.markdown("### ¿Buscas más informacion del municipio?")
-                st.subheader("2. Elige qué indicador quieres explorar")
+                st.subheader(
+                    "2. Elige qué indicador quieres explorar :bar_chart: ")
                 indicators_dict = create_indicators(
                     indicators_json["indicators"])
                 indicator = select_indicator_one(indicators_dict)
@@ -275,8 +280,10 @@ def search_best_municipalities(indicators, k):
 
     # st.json(data_municipalities)
 
-    municipality_sums = [(municipality_id, sum(indicators.values()), list(indicators.values()))
-                         for municipality_id, indicators in data_municipalities.items()]
+    municipality_sums = [
+        (municipality_id, sum(indicators.values()), list(indicators.values()))
+        for municipality_id, indicators in data_municipalities.items()
+    ]
 
     municipality_sums.sort(key=lambda x: x[1], reverse=True)
     top_k_municipalities = municipality_sums[:k]
@@ -294,8 +301,9 @@ def find_municipality(df_municipios):
 
     if indicators:
 
-        st.markdown("""
-        #### 3. Asigna la escala de importancia
+        st.markdown(
+            """
+        #### 3. Asigna el valor de importancia para cada indicador :pencil:
 
         1. **Menos importancia**: El indicador no es relevante pero lo quieres tener en cuenta en la busqueda.
         2. **Poca importancia**: El indicador es ligeramente importante, pero no decisivo.
@@ -303,13 +311,14 @@ def find_municipality(df_municipios):
         4. **Alta importancia**: El indicador es muy importante y debe ser tenido en cuenta.
         5. **Máxima importancia**: Este valor representa que el indicador es crítico para tu decisión.
 
-        """)
+        """
+        )
         for i in indicators:
             value = st.slider(f"{i.name}", min_value=1,
                               max_value=5, value=1, step=1)
             i.weight = value
 
-        if st.button("Mostrar municipios recomendados para vivir"):
+        if st.button("Mostrar municipios recomendados para vivir :magic_wand: "):
 
             with st.spinner("Buscando los mejores municipios..."):
                 top_5_municipalities = search_best_municipalities(
@@ -327,33 +336,59 @@ def find_municipality(df_municipios):
                     id_mun: (name, sums) for id_mun, name, sums in top_5_municipalities
                 }
 
-                filtered_df["Puntuación"], filtered_df["Sums"] = zip(*filtered_df["ID"].map(mapping_dict))
-                                
+                filtered_df["Puntuación"], filtered_df["Sums"] = zip(
+                    *filtered_df["ID"].map(mapping_dict)
+                )
+
                 filtered_municipios = search_coordinates(filtered_df)
 
-                filtered_municipios['GoogleMaps Link'] = filtered_municipios.apply(
-                    create_google_maps_link, axis=1)
+                filtered_municipios["GoogleMaps Link"] = filtered_municipios.apply(
+                    create_google_maps_link, axis=1
+                )
 
-                #filtered_municipios['Indicadores'] =
+                # filtered_municipios['Indicadores'] =
 
-                df_show = filtered_df[["Municipio", "Provincia", "Sums",
-                                       "Puntuación", "Wiki URL", "GoogleMaps Link"]]
+                df_show = filtered_df[
+                    [
+                        "Municipio",
+                        "Provincia",
+                        "Sums",
+                        "Puntuación",
+                        "Wiki URL",
+                        "GoogleMaps Link",
+                    ]
+                ]
 
                 st.dataframe(
                     df_show.sort_values(by="Puntuación", ascending=False),
                     hide_index=True,
                     column_config={
-                        "GoogleMaps Link": st.column_config.LinkColumn("Google Maps", display_text="Link"),
+                        "GoogleMaps Link": st.column_config.LinkColumn(
+                            "Google Maps", display_text="Link"
+                        ),
                         "Wiki URL": st.column_config.LinkColumn("Wikipedia"),
-                        "Sums": st.column_config.LineChartColumn(
-                            "Indicadores"
-                        )
-                    })
+                        "Sums": st.column_config.LineChartColumn("Indicadores"),
+                    },
+                )
 
                 show_map_municipios(filtered_municipios)
 
 
 if __name__ == "__main__":
+
+    page_style = """
+        <style>
+            .footer {
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+                text-align: center;
+                background-color: #f1f1f1;
+                padding: 10px;
+            }
+        </style>
+    """
+    st.markdown(page_style, unsafe_allow_html=True)
 
     logo = load_resources()
 
@@ -367,7 +402,7 @@ if __name__ == "__main__":
     st.sidebar.markdown(
         "[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
 
-    st.sidebar.title("Navegación")
+    st.sidebar.markdown("### Navegación")
     selected_section = st.sidebar.radio(
         "Elige una sección:",
         [
@@ -377,23 +412,33 @@ if __name__ == "__main__":
     )
 
     if selected_section == "Encuentra tu municipio ideal":
-        st.title("Encuentra tu municipio ideal")
+        st.title("Encuentra tu municipio ideal :house_buildings:")
 
         st.markdown(
-            "### ¡Sigue estos 3 pasos para encontrar el municipio perfecto para ti!")
+            "### ¡Sigue estos 3 pasos para encontrar el municipio perfecto para ti!"
+        )
 
-        st.subheader("1. Elige los grupos que te interesan ")
+        st.subheader(
+            "1. Elige los grupos que te interesan :arrows_counterclockwise:")
 
         find_municipality(df_municipios)
 
     elif selected_section == "Explorar los municipios":
-        st.title("Explorar los municipios")
-
-        st.markdown(
-            "**Selecciona un municipio del que quieras ver información**")
+        st.title("Explorar los municipios :mag:")
 
         st.subheader("¡Descubre lo que cada municipio te puede ofrecer!")
 
         search_municipality(df_municipios)
     else:
         pass
+
+    footer = """
+    <div style="text-align: center; padding: 20px; margin-top: 50px;">
+        <hr>
+        <p>© 2024  Bizileku Bila. </p>
+    <p>Este contenido está bajo una licencia <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>.</p>
+
+    <p> Desarrollado por <br>Álvaro García Barragán, Alberto González Calatayud, Laura Masa Martínez y Enrique Solera Navarro. </p>
+    </div>
+    """
+    st.sidebar.markdown(footer, unsafe_allow_html=True)
