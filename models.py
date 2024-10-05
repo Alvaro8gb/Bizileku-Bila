@@ -1,3 +1,4 @@
+import html
 from typing import List, Dict, Optional
 from pydantic import BaseModel
 
@@ -16,7 +17,7 @@ def parse_indicator(json_data: dict):
 
     return Indicator(
         id=json_data["id"],
-        name=json_data["name"],
+        name=html.unescape(json_data["name"]),
         group=json_data["_links"]["group"]["name"],
         subgroup=json_data["_links"]["subgroup"]["name"],
         years=years,
@@ -25,7 +26,7 @@ def parse_indicator(json_data: dict):
 
 def create_indicators(indicators_json: dict):
     return {
-        indicator["name"]: parse_indicator(indicator) for indicator in indicators_json
+        html.unescape(indicator["name"]): parse_indicator(indicator) for indicator in indicators_json
     }
 
 

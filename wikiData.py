@@ -25,11 +25,16 @@ def get_entity_data(qualifier):
         latitude = coordinates.latitude
         longitude = coordinates.longitude
 
+    
+    sitelinks = entity.data.get("sitelinks", {})
+    spanish_wikipedia = sitelinks.get('eswiki', {}).get('url', None)
+
     return {
         "description": description,
         "img_url": img_url,
         "latitude": latitude,
         "longitude": longitude,
+        "wiki_url": spanish_wikipedia
     }
 
 

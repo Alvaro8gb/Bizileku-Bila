@@ -1,3 +1,4 @@
+import html
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
@@ -10,6 +11,10 @@ from linkedData import load_municipios
 from resourceManager import load_resources
 from models import create_indicators
 from score import calculate_score
+
+
+def create_google_maps_link(row):
+    return f"https://www.google.com/maps/search/?api=1&query={row['Latitud']},{row['Longitud']}"
 
 
 @st.cache_data
@@ -68,25 +73,29 @@ def fetch_lat_long(qualifier):
         entity_data.get("latitude", None),
         entity_data.get("longitude", None),
         entity_data.get("img_url", None),
+        entity_data.get("wiki_url", None),
     )
 
 
 def search_coordinates(df):
 
-    with st.spinner("Cargando información de los municipios"):
+    with st.spinner("Localizando los municipios..."):
 
         lat_long_pairs = df["Qualifier"].apply(fetch_lat_long)
 
-        latitudes, longitudes, image_urls = zip(*lat_long_pairs)
+        latitudes, longitudes, img_urls, wiki_urls = zip(*lat_long_pairs)
 
         df.loc[:, "Latitud"] = latitudes
         df.loc[:, "Longitud"] = longitudes
-        df.loc[:, "Image URL"] = image_urls
+        df.loc[:, "Image URL"] = img_urls
+        df.loc[:, "Wiki URL"] = wiki_urls
+
     return df
 
 
 def select_groups(indicators_dict: dict):
-    groups = list(set([indicator.group for indicator in indicators_dict.values()]))
+    groups = list(
+        set([indicator.group for indicator in indicators_dict.values()]))
 
     selected_group = st.selectbox("Selecciona un Grupo", groups)
 
@@ -98,7 +107,8 @@ def select_groups(indicators_dict: dict):
         )
     )
 
-    selected_subgroup = st.selectbox("Selecciona un Subgrupo", filtered_subgroups)
+    selected_subgroup = st.selectbox(
+        "Selecciona un Subgrupo", filtered_subgroups)
 
     filtered_indicators = [
         indicator.name
@@ -112,8 +122,8 @@ def select_groups(indicators_dict: dict):
 def select_indicator_one(indicators_dict: dict):
 
     filtered_indicators = select_groups(indicators_dict)
-
-    selected_indicator = st.selectbox("Selecciona un Indicador", filtered_indicators)
+    selected_indicator = st.selectbox(
+        "Selecciona un Indicador", filtered_indicators)
 
     indicator = indicators_dict[selected_indicator]
 
@@ -132,8 +142,9 @@ def select_indicator_several(indicators_json: dict):
     st.markdown("### 2. Selecciona los indicadores clave")
 
     st.write("Ten en cuenta que algunos indicadores, como la criminalidad, pueden distorsionar los resultados.")
-                    
-    st.markdown("Para mejores sugerencias, **evita seleccionar indicadores que representen aspectos negativos**") 
+
+    st.markdown(
+        "Para mejores sugerencias, **evita seleccionar indicadores que representen aspectos negativos**")
 
     selected_indicators_names = st.multiselect(
         "Selecciona un Indicador",
@@ -142,7 +153,8 @@ def select_indicator_several(indicators_json: dict):
 
     if st.button("Añadir indicadores"):
         st.session_state["selected_indicators"] = list(
-            set(st.session_state["selected_indicators"] + selected_indicators_names)
+            set(st.session_state["selected_indicators"] +
+                selected_indicators_names)
         )
 
     if st.session_state["selected_indicators"]:
@@ -162,33 +174,6 @@ def select_indicator_several(indicators_json: dict):
             indicators_dict[name] for name in st.session_state["selected_indicators"]
         ]
 
-        grouped_data = {}
-
-        for i in indicators:
-            group = i.group
-            subgroup = i.subgroup
-
-            if group not in grouped_data:
-                grouped_data[group] = {}
-            if subgroup not in grouped_data[group]:
-                grouped_data[group][subgroup] = []
-
-            grouped_data[group][subgroup].append(i)
-
-        html_output = "<ul>"
-        for group, subgroups in grouped_data.items():
-            html_output += f"<li><strong>{group}</strong><ul>"
-            for subgroup, items in subgroups.items():
-                html_output += f"<li><strong>{subgroup}</strong><ul>"
-                for i in items:
-                    html_output += f"<li>{i.name}</li>"
-                html_output += "</ul></li>"
-            html_output += "</ul></li>"
-        html_output += "</ul>"
-
-     #   st.markdown("### Lista de Indicadores Seleccionados:")
-     #  st.markdown(html_output, unsafe_allow_html=True)
-
     indicators = [
         indicators_dict[name] for name in st.session_state["selected_indicators"]
     ]
@@ -207,13 +192,13 @@ def search_municipality(df_municipios):
             df_municipios["Provincia"].isin(seleteted_provincia)
         ]
 
-        selected_municipio = st.multiselect(
+        selected_municipios = st.multiselect(
             "Elige un Municipio:", filtered_municipios["Municipio"]
         )
 
-        if selected_municipio:
+        if selected_municipios:
             filtered_municipios = df_municipios[
-                df_municipios["Municipio"].isin(selected_municipio)
+                df_municipios["Municipio"].isin(selected_municipios)
             ]
 
             # st.write(f"Numero de municipios de : {len(filtered_municipios)}")
@@ -223,30 +208,35 @@ def search_municipality(df_municipios):
 
             show_map_municipios(filtered_municipios)
 
-            selected_municipality = st.selectbox("Mas información", selected_municipio)
+            selected_municipio = st.selectbox(
+                "Mas información", selected_municipios)
 
-            if selected_municipality:
+            if selected_municipio:
                 municipios_dict = filtered_municipios.set_index("Municipio").to_dict(
                     "index"
                 )
 
-                info = municipios_dict[selected_municipality]
+                info = municipios_dict[selected_municipio]
 
                 # st.write(info)
 
                 with st.spinner("Cargando imagen"):
                     st.image(
                         info["Image URL"],
-                        caption=selected_municipality,
+                        caption=selected_municipio,
                         use_column_width=True,
                     )
+
+                st.markdown(
+                    f'Para más información consulta página de Wikipedia: [aquí]({info["Wiki URL"]})')
 
                 indicators_json = API_KPI.get_inidicators(info["ID"])
 
                 # st.json(indicators_json)
                 st.markdown("### ¿Buscas más informacion del municipio?")
                 st.subheader("2. Elige qué indicador quieres explorar")
-                indicators_dict = create_indicators(indicators_json["indicators"])
+                indicators_dict = create_indicators(
+                    indicators_json["indicators"])
                 indicator = select_indicator_one(indicators_dict)
 
                 years_data = pd.DataFrame(
@@ -261,7 +251,8 @@ def search_municipality(df_municipios):
                     years_data.drop(columns=["Año"], inplace=True)
                     st.table(years_data)
                 else:
-                    show_indicator(years_data, selected_municipality, indicator.name)
+                    show_indicator(
+                        years_data, selected_municipio, indicator.name)
 
 
 def search_best_municipalities(indicators, k):
@@ -284,10 +275,8 @@ def search_best_municipalities(indicators, k):
 
     # st.json(data_municipalities)
 
-    municipality_sums = []
-    for municipality_id, indicators in data_municipalities.items():
-        total_sum = sum(indicators.values())
-        municipality_sums.append((municipality_id, total_sum))
+    municipality_sums = [(municipality_id, sum(indicators.values()), list(indicators.values()))
+                         for municipality_id, indicators in data_municipalities.items()]
 
     municipality_sums.sort(key=lambda x: x[1], reverse=True)
     top_k_municipalities = municipality_sums[:k]
@@ -304,11 +293,11 @@ def find_municipality(df_municipios):
     indicators = select_indicator_several(indicators_json)
 
     if indicators:
-                    
+
         st.markdown("""
         #### 3. Asigna la escala de importancia
 
-        1. **Menos importancia**: Este valor indica que el indicador no es relevante para ti.
+        1. **Menos importancia**: El indicador no es relevante pero lo quieres tener en cuenta en la busqueda.
         2. **Poca importancia**: El indicador es ligeramente importante, pero no decisivo.
         3. **Importancia moderada**: Consideras el indicador importante, pero no crucial.
         4. **Alta importancia**: El indicador es muy importante y debe ser tenido en cuenta.
@@ -316,40 +305,52 @@ def find_municipality(df_municipios):
 
         """)
         for i in indicators:
-            value = st.slider(f"{i.name}", min_value=1, max_value=5, value=1, step=1)
+            value = st.slider(f"{i.name}", min_value=1,
+                              max_value=5, value=1, step=1)
             i.weight = value
 
         if st.button("Mostrar municipios recomendados para vivir"):
 
             with st.spinner("Buscando los mejores municipios..."):
-                top_5_municipalities = search_best_municipalities(indicators, 5)
+                top_5_municipalities = search_best_municipalities(
+                    indicators, 5)
 
+                # st.write(top_5_municipalities)
                 filter_ids = [
-                    municipality_id for municipality_id, _ in top_5_municipalities
+                    municipality_id for municipality_id, _, _ in top_5_municipalities
                 ]
 
-                filtered_df = df_municipios[df_municipios["ID"].isin(filter_ids)]
+                filtered_df = df_municipios[df_municipios["ID"].isin(
+                    filter_ids)]
 
-                filtered_df["Puntuación"] = filtered_df["ID"].map(
-                    dict(top_5_municipalities)
-                )
+                mapping_dict = {
+                    id_mun: (name, sums) for id_mun, name, sums in top_5_municipalities
+                }
 
-                df_show = filtered_df[["Municipio", "Provincia", "Puntuación"]]
-
-                df_show.set_index("Municipio", inplace=True)
-
-                st.table(df_show.sort_values(by="Puntuación", ascending=False))
-
+                filtered_df["Puntuación"], filtered_df["Sums"] = zip(*filtered_df["ID"].map(mapping_dict))
+                                
                 filtered_municipios = search_coordinates(filtered_df)
+
+                filtered_municipios['GoogleMaps Link'] = filtered_municipios.apply(
+                    create_google_maps_link, axis=1)
+
+                #filtered_municipios['Indicadores'] =
+
+                df_show = filtered_df[["Municipio", "Provincia", "Sums",
+                                       "Puntuación", "Wiki URL", "GoogleMaps Link"]]
+
+                st.dataframe(
+                    df_show.sort_values(by="Puntuación", ascending=False),
+                    hide_index=True,
+                    column_config={
+                        "GoogleMaps Link": st.column_config.LinkColumn("Google Maps", display_text="Link"),
+                        "Wiki URL": st.column_config.LinkColumn("Wikipedia"),
+                        "Sums": st.column_config.LineChartColumn(
+                            "Indicadores"
+                        )
+                    })
+
                 show_map_municipios(filtered_municipios)
-
-                # filtered_municipios['Google Maps Enlace'] = filtered_municipios.apply(create_google_maps_link, axis=1)
-
-                # st.table(filtered_municipios)
-
-
-def create_google_maps_link(row):
-    return f"https://www.google.com/maps/search/?api=1&query={row['Latitud']},{row['Longitud']}"
 
 
 if __name__ == "__main__":
@@ -363,7 +364,8 @@ if __name__ == "__main__":
         unsafe_allow_html=True,
     )
     st.sidebar.write(logo, unsafe_allow_html=True)
-    st.sidebar.markdown("[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
+    st.sidebar.markdown(
+        "[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
 
     st.sidebar.title("Navegación")
     selected_section = st.sidebar.radio(
@@ -377,19 +379,21 @@ if __name__ == "__main__":
     if selected_section == "Encuentra tu municipio ideal":
         st.title("Encuentra tu municipio ideal")
 
-        st.markdown("### ¡Sigue estos 3 pasos para encontrar el municipio perfecto para ti!")
+        st.markdown(
+            "### ¡Sigue estos 3 pasos para encontrar el municipio perfecto para ti!")
 
         st.subheader("1. Elige los grupos que te interesan ")
-
 
         find_municipality(df_municipios)
 
     elif selected_section == "Explorar los municipios":
         st.title("Explorar los municipios")
 
-        st.markdown("**Selecciona un municipio del que quieras ver información**")
+        st.markdown(
+            "**Selecciona un municipio del que quieras ver información**")
 
         st.subheader("¡Descubre lo que cada municipio te puede ofrecer!")
+
         search_municipality(df_municipios)
     else:
         pass
