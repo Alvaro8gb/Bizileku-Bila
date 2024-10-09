@@ -10,7 +10,7 @@ from wikiData import get_entity_data
 from linkedData import load_municipios
 from resourceManager import load_resources
 from models import create_indicators
-from score import calculate_score
+from score import find_best_municipalities
 
 
 def create_google_maps_link(row):
@@ -18,7 +18,7 @@ def create_google_maps_link(row):
 
 
 @st.cache_data
-def show_map_municipios(df):
+def map_municipios(df):
 
     scatterplot_layer = pdk.Layer(
         "ScatterplotLayer",
@@ -37,13 +37,12 @@ def show_map_municipios(df):
         pitch=0,
     )
 
-    r = pdk.Deck(
+    deck = pdk.Deck(
         layers=[scatterplot_layer],
         initial_view_state=view_state,
         tooltip={"text": "{Municipio}"},
     )
-
-    st.pydeck_chart(r)
+    return deck
 
 
 @st.cache_data
@@ -94,8 +93,7 @@ def search_coordinates(df):
 
 
 def select_groups(indicators_dict: dict):
-    groups = list(
-        set([indicator.group for indicator in indicators_dict.values()]))
+    groups = list(set([indicator.group for indicator in indicators_dict.values()]))
 
     selected_group = st.selectbox("Selecciona un Grupo", groups)
 
@@ -107,8 +105,7 @@ def select_groups(indicators_dict: dict):
         )
     )
 
-    selected_subgroup = st.selectbox(
-        "Selecciona un Subgrupo", filtered_subgroups)
+    selected_subgroup = st.selectbox("Selecciona un Subgrupo", filtered_subgroups)
 
     filtered_indicators = [
         indicator.name
@@ -122,8 +119,7 @@ def select_groups(indicators_dict: dict):
 def select_indicator_one(indicators_dict: dict):
 
     filtered_indicators = select_groups(indicators_dict)
-    selected_indicator = st.selectbox(
-        "Selecciona un Indicador", filtered_indicators)
+    selected_indicator = st.selectbox("Selecciona un Indicador", filtered_indicators)
 
     indicator = indicators_dict[selected_indicator]
 
@@ -145,7 +141,6 @@ def select_indicator_several(indicators_json: dict):
         "Los indicadores se pueden selecionar de varios grupos y después borrarlos."
     )
 
-
     selected_indicators_names = st.multiselect(
         "Selecciona un Indicador",
         filtered_indicators,
@@ -153,8 +148,7 @@ def select_indicator_several(indicators_json: dict):
 
     if st.button("Añadir indicadores"):
         st.session_state["selected_indicators"] = list(
-            set(st.session_state["selected_indicators"] +
-                selected_indicators_names)
+            set(st.session_state["selected_indicators"] + selected_indicators_names)
         )
 
     if st.session_state["selected_indicators"]:
@@ -206,7 +200,9 @@ def search_municipality(df_municipios):
 
             filtered_municipios = search_coordinates(filtered_municipios)
 
-            show_map_municipios(filtered_municipios)
+            deck = map_municipios(filtered_municipios)
+
+            st.pydeck_chart(deck)
 
             selected_municipio = st.selectbox(
                 "Mas información :round_pushpin: ", selected_municipios
@@ -235,10 +231,8 @@ def search_municipality(df_municipios):
                 indicators_json = API_KPI.get_inidicators(info["ID"])
 
                 # st.json(indicators_json)
-                st.subheader(
-                    "2. Elige qué indicador quieres explorar :bar_chart: ")
-                indicators_dict = create_indicators(
-                    indicators_json["indicators"])
+                st.subheader("2. Elige qué indicador quieres explorar :bar_chart: ")
+                indicators_dict = create_indicators(indicators_json["indicators"])
                 indicator = select_indicator_one(indicators_dict)
 
                 years_data = pd.DataFrame(
@@ -253,39 +247,7 @@ def search_municipality(df_municipios):
                     years_data.drop(columns=["Año"], inplace=True)
                     st.table(years_data)
                 else:
-                    show_indicator(
-                        years_data, selected_municipio, indicator.name)
-
-
-def find_best_municipalities(indicators, k):
-    data_municipalities = {}
-
-    for i in indicators:
-        municipalities = API_KPI.get_municipalities(i.id)
-
-        # st.json(municipalities)
-
-        for m in municipalities["municipalities"]:
-
-            if m["id"] not in data_municipalities:
-                data_municipalities[m["id"]] = {}
-
-            last_year = max(m["years"][0].keys())
-            last_value = m["years"][0][last_year]
-            score = calculate_score(last_value)
-            data_municipalities[m["id"]][i.id] = score * i.weight
-
-    # st.json(data_municipalities)
-
-    municipality_sums = [
-        (municipality_id, sum(indicators.values()), list(indicators.values()))
-        for municipality_id, indicators in data_municipalities.items()
-    ]
-
-    municipality_sums.sort(key=lambda x: x[1], reverse=True)
-    top_k_municipalities = municipality_sums[:k]
-
-    return top_k_municipalities
+                    show_indicator(years_data, selected_municipio, indicator.name)
 
 
 def find_municipality(df_municipios):
@@ -312,23 +274,20 @@ def find_municipality(df_municipios):
         """
         )
         for i in indicators:
-            value = st.slider(f"{i.name}", min_value=-2,
-                              max_value=2, value=1, step=1)
+            value = st.slider(f"{i.name}", min_value=-2, max_value=2, value=1, step=1)
             i.weight = value
 
         if st.button("Mostrar municipios recomendados para vivir :magic_wand: "):
 
             with st.spinner("Buscando los mejores municipios..."):
-                top_5_municipalities = find_best_municipalities(
-                    indicators, 5)
+                top_5_municipalities = find_best_municipalities(indicators, 5)
 
                 # st.write(top_5_municipalities)
                 filter_ids = [
                     municipality_id for municipality_id, _, _ in top_5_municipalities
                 ]
 
-                filtered_df = df_municipios[df_municipios["ID"].isin(
-                    filter_ids)]
+                filtered_df = df_municipios[df_municipios["ID"].isin(filter_ids)]
 
                 mapping_dict = {
                     id_mun: (name, sums) for id_mun, name, sums in top_5_municipalities
@@ -369,7 +328,9 @@ def find_municipality(df_municipios):
                     },
                 )
 
-                show_map_municipios(filtered_municipios)
+                deck = map_municipios(filtered_municipios)
+
+                st.pydeck_chart(deck)
 
 
 if __name__ == "__main__":
@@ -397,8 +358,7 @@ if __name__ == "__main__":
         unsafe_allow_html=True,
     )
     st.sidebar.write(logo, unsafe_allow_html=True)
-    st.sidebar.markdown(
-        "[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
+    st.sidebar.markdown("[https://opendata.euskadi.eus](https://opendata.euskadi.eus)")
 
     st.sidebar.markdown("### Navegación")
     selected_section = st.sidebar.radio(
@@ -416,8 +376,7 @@ if __name__ == "__main__":
             "### ¡Sigue estos 3 pasos para encontrar el municipio perfecto para ti!"
         )
 
-        st.subheader(
-            "1. Elige los grupos que te interesan :arrows_counterclockwise:")
+        st.subheader("1. Elige los grupos que te interesan :arrows_counterclockwise:")
 
         find_municipality(df_municipios)
 
