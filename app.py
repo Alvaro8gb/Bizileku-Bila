@@ -263,13 +263,13 @@ def find_municipality(df_municipios):
         st.markdown(
             """
         #### 3. Asigna el valor de importancia para cada indicador :pencil:
-        Ten en cuenta que algunos indicadores, como la criminalidad, si eliges una puntuación positiva haria que apareciesen los barrios con mayor criminalidad.
+        Ten en cuenta que algunos indicadores, como la criminalidad, si eliges un valor positivo podría mostrar barrios con más delitos.
 
-        - **-2 (Resta significativamente)**: El indicador tiene un impacto muy negativo y es crítico que se reste de la evaluación.
-        - **-1 (Resta ligeramente)**: El indicador tiene un impacto negativo, aunque no es decisivo. Prefieres que reste de forma moderada.
-        - **0 (Neutral)**: El indicador no es relevante. Se toma en cuenta, pero no afecta ni positiva ni negativamente.
-        -  **1 (Suma ligeramente)**: El indicador es importante, pero no crucial. Se prefiere que sume de forma ligera en la evaluación.
-        - **2 (Suma significativamente)**: El indicador es crítico y debe sumar de manera importante en la evaluación.
+        - **-2 (Resta significativamente)**: El indicador tiene un impacto muy negativo, es importante que se reste.
+        - **-1 (Resta ligeramente)**: El indicador tiene un impacto negativo, prefiero que reste algunos puntos.
+        - **0 (Neutral)**: El indicador no es relevante, no afecta la puntuación.
+        -  **1 (Suma ligeramente)**: El indicador es importante, pero no crucial. Suma algunos puntos.
+        - **2 (Suma significativamente)**: El indicador es crítico y debe sumar de manera significativa.
 
         """
         )
