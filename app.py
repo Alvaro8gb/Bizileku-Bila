@@ -142,12 +142,9 @@ def select_indicator_several(indicators_json: dict):
     st.markdown("### 2. Selecciona los indicadores clave :bar_chart: ")
 
     st.write(
-        "Ten en cuenta que algunos indicadores, como la criminalidad, pueden distorsionar los resultados."
+        "Los indicadores se pueden selecionar de varios grupos y después borrarlos."
     )
 
-    st.markdown(
-        "Para mejores sugerencias, **evita seleccionar indicadores que representen aspectos negativos**"
-    )
 
     selected_indicators_names = st.multiselect(
         "Selecciona un Indicador",
@@ -260,7 +257,7 @@ def search_municipality(df_municipios):
                         years_data, selected_municipio, indicator.name)
 
 
-def search_best_municipalities(indicators, k):
+def find_best_municipalities(indicators, k):
     data_municipalities = {}
 
     for i in indicators:
@@ -304,24 +301,25 @@ def find_municipality(df_municipios):
         st.markdown(
             """
         #### 3. Asigna el valor de importancia para cada indicador :pencil:
+        Ten en cuenta que algunos indicadores, como la criminalidad, si eliges una puntuación positiva haria que apareciesen los barrios con mayor criminalidad.
 
-        1. **Menos importancia**: El indicador no es relevante pero lo quieres tener en cuenta en la busqueda.
-        2. **Poca importancia**: El indicador es ligeramente importante, pero no decisivo.
-        3. **Importancia moderada**: Consideras el indicador importante, pero no crucial.
-        4. **Alta importancia**: El indicador es muy importante y debe ser tenido en cuenta.
-        5. **Máxima importancia**: Este valor representa que el indicador es crítico para tu decisión.
+        - **-2 (Resta significativamente)**: El indicador tiene un impacto muy negativo y es crítico que se reste de la evaluación.
+        - **-1 (Resta ligeramente)**: El indicador tiene un impacto negativo, aunque no es decisivo. Prefieres que reste de forma moderada.
+        - **0 (Neutral)**: El indicador no es relevante. Se toma en cuenta, pero no afecta ni positiva ni negativamente.
+        -  **1 (Suma ligeramente)**: El indicador es importante, pero no crucial. Se prefiere que sume de forma ligera en la evaluación.
+        - **2 (Suma significativamente)**: El indicador es crítico y debe sumar de manera importante en la evaluación.
 
         """
         )
         for i in indicators:
-            value = st.slider(f"{i.name}", min_value=1,
-                              max_value=5, value=1, step=1)
+            value = st.slider(f"{i.name}", min_value=-2,
+                              max_value=2, value=1, step=1)
             i.weight = value
 
         if st.button("Mostrar municipios recomendados para vivir :magic_wand: "):
 
             with st.spinner("Buscando los mejores municipios..."):
-                top_5_municipalities = search_best_municipalities(
+                top_5_municipalities = find_best_municipalities(
                     indicators, 5)
 
                 # st.write(top_5_municipalities)
