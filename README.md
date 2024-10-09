@@ -1,11 +1,16 @@
 # Bizileku Bila: En busca de un lugar para vivir en Euskadi.
+   [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)]()
+
+<div>
+    <img src="static/logo.svg" alt="Project Logo" style="height: 200px; vertical-align: middle;" />
+
+</div>
 
 
-
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)]()
 
 
 ``Bizileku Bila`` surge como una herramienta que facilita la búsqueda del municipio ideal en Euskadi a través de las fuentes de datos abiertos del País Vasco: [APIs](https://opendata.euskadi.eus/apis/-/apis-open-data)
+
 
 
 ## Características
