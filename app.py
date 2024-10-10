@@ -1,4 +1,3 @@
-import html
 import streamlit as st
 import pydeck as pdk
 import pandas as pd
@@ -63,7 +62,7 @@ def show_indicator(years_data, municipality_name, selected_indicator):
 
     st.plotly_chart(fig)
 
-
+@st.cache_data
 def fetch_lat_long(qualifier):
 
     entity_data = get_entity_data(qualifier)

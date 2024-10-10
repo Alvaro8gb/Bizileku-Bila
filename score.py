@@ -8,7 +8,7 @@ def calculate_score(kpi):
     if kpi <= 0:
         return 0
     else:
-        return math.log(kpi)
+        return math.log(kpi + 1) # Correction for kpis under 1
 
 
 def find_best_municipalities(indicators, k):
@@ -28,6 +28,7 @@ def find_best_municipalities(indicators, k):
             last_value = m["years"][0][last_year]
             score = calculate_score(last_value)
             data_municipalities[m["id"]][i.id] = score * i.weight
+            print(score * i.weight)
 
     # st.json(data_municipalities)
 

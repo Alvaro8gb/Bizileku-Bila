@@ -1,5 +1,5 @@
 # Bizileku Bila: En busca de un lugar para vivir en Euskadi.
-   [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)]()
+   [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://bizileku-bila.streamlit.app/)
 
 <div>
     <img src="static/logo.svg" alt="Project Logo" style="height: 200px; vertical-align: middle;" />
@@ -82,6 +82,7 @@ Este proyecto está bajo la licencia [GNU](LICENSE).
 ## Reporte 
 
 Para más información sobre el proyecto leer [reporte](report.pdf).
+
 ## Créditos
 
 - **Fuente de Datos**: [Datos Abiertos de Euskadi](https://opendata.euskadi.eus)
